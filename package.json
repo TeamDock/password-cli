@@ -1,6 +1,6 @@
 {
     "name": "@dockteam/password-cli",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "license": "MIT",
     "author": "pedrinfx",
     "description": "Password-cli is commandline interface to manage your passwords.",
