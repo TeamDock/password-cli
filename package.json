@@ -3,6 +3,7 @@
     "version": "0.3.0",
     "license": "MIT",
     "author": "pedrinfx",
+    "description": "Password-cli is commandline interface to manage your passwords.",
     "homepage": "https://github.com/TeamDock/password-cli#readme",
     "repository": {
         "type": "git",
