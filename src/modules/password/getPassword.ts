@@ -1,15 +1,18 @@
 import path from 'path';
-import inquirer from 'inquirer';
 import { existsSync, mkdirSync } from 'fs';
 import { APPDATA } from '../../utils/paths';
 import { getPasswordfromPasswordlist } from '../passwordlist';
+import { requestPassword } from '../../utils/requestPassword';
 
 type IGetPassword = {
     passwordlist?: string;
-    name: string;
 };
 
-async function getPassword(passwordlist: string, options: IGetPassword) {
+async function getPassword(
+    passwordlist: string,
+    name: string,
+    options: IGetPassword
+) {
     const passwordsPath = path.join(APPDATA, 'passwordlist');
     mkdirSync(passwordsPath, { recursive: true });
 
@@ -20,23 +23,12 @@ async function getPassword(passwordlist: string, options: IGetPassword) {
     let pwPasswordlist: string;
 
     if (!options.passwordlist) {
-        pwPasswordlist = (
-            await inquirer.prompt({
-                type: 'password',
-                message: 'Password of password list',
-                name: 'password',
-                mask: '*',
-            })
-        ).password;
+        pwPasswordlist = await requestPassword('Password of password list');
     } else {
         pwPasswordlist = options.passwordlist;
     }
 
-    return getPasswordfromPasswordlist(
-        passwordlist,
-        options.name,
-        pwPasswordlist
-    );
+    return getPasswordfromPasswordlist(passwordlist, name, pwPasswordlist);
 }
 
 export default getPassword;

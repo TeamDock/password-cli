@@ -8,13 +8,16 @@ import { readPasswordlist, writePasswordlist } from '../passwordlist';
 import { PasswordList } from '../../@types/passwordlist';
 
 type ISavePassword = {
-    password?: string;
+    password: string;
     noverify: boolean;
-    passwordlist?: string;
-    name: string;
+    passwordlistPassword: string;
 };
 
-async function savePassword(passwordlist: string, options: ISavePassword) {
+async function savePassword(
+    passwordlist: string,
+    name: string,
+    options: ISavePassword
+) {
     const passwordsPath = path.join(APPDATA, 'passwordlist');
     mkdirSync(passwordsPath, { recursive: true });
 
@@ -22,39 +25,9 @@ async function savePassword(passwordlist: string, options: ISavePassword) {
         throw new Error('This passwordlist does not exist');
     }
 
-    let pwPasswordlist: string;
-
-    if (!options.passwordlist) {
-        pwPasswordlist = (
-            await inquirer.prompt({
-                type: 'password',
-                message: 'Password of password list',
-                name: 'password',
-                mask: '*',
-            })
-        ).password;
-    } else {
-        pwPasswordlist = options.passwordlist;
-    }
-
-    let passwordToSave: string;
-
-    if (!options.password) {
-        passwordToSave = (
-            await inquirer.prompt({
-                type: 'password',
-                message: 'Password to save',
-                name: 'password',
-                mask: '*',
-            })
-        ).password;
-    } else {
-        passwordToSave = options.password;
-    }
-
     if (!options.noverify) {
         console.log('Verifying your password...');
-        const result = await verifyPassword(passwordToSave);
+        const result = await verifyPassword(options.password);
 
         if (result) {
             console.error(chalk.red(`Found: ${result.found}`));
@@ -80,24 +53,22 @@ async function savePassword(passwordlist: string, options: ISavePassword) {
 
     try {
         decryptedPasswordList = JSON.parse(
-            readPasswordlist(passwordlist, pwPasswordlist)
+            readPasswordlist(passwordlist, options.passwordlistPassword)
         ) as PasswordList[];
     } catch (error) {
         throw new Error('Incorrect password.');
     }
 
     decryptedPasswordList.push({
-        password: passwordToSave,
-        name: options.name,
+        password: options.password,
+        name,
     });
 
     writePasswordlist(
         JSON.stringify(decryptedPasswordList),
-        pwPasswordlist,
+        options.passwordlistPassword,
         passwordlist
     );
-
-    console.log(chalk.green('Successfully saved!'));
 }
 
 export default savePassword;

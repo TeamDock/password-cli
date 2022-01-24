@@ -3,10 +3,12 @@ import inquirer from 'inquirer';
 import clipboard from 'clipboardy';
 import chalk from 'chalk';
 import ora from 'ora';
+import packageJson from '../package.json';
+import { APPDATA } from './utils/paths';
 import { program } from 'commander';
 import { mkdirSync } from 'fs';
-import { APPDATA } from './utils/paths';
-import packageJson from '../package.json';
+import { requestPassword } from './utils/requestPassword';
+import { getPasswordlist } from './utils/getPasswordlist';
 
 import {
     generatePassword,
@@ -17,6 +19,7 @@ import {
 
 import {
     createPasswordlist,
+    deletePasswordlist,
     listAllPasswordlist,
 } from './modules/passwordlist';
 
@@ -56,9 +59,17 @@ program
     .description('Verifies your password')
     .option('-p, --password <password>', 'Your password')
     .action(async (args) => {
+        let _password: string;
+
+        if (!args.password) {
+            _password = await requestPassword();
+        } else {
+            _password = args.password;
+        }
         const spinner = ora('Verifying...');
         spinner.start();
-        const result = await verifyPassword(args.password);
+
+        const result = await verifyPassword(_password);
 
         if (result) {
             spinner.fail('Found');
@@ -75,37 +86,48 @@ program
     });
 
 program
-    .command('save <passwordlist>')
+    .command('save [passwordlist] <name>')
     .description('Save your password in safe place')
     .option('-p, --password <password>', 'Password to save')
-    .option('-pl, --passwordlist <password>', 'Password of password list')
-    .option('-n, --name <name>', 'Password name.')
+    .option(
+        '-pl, --passwordlistPassword <password>',
+        'Password of password list'
+    )
     .option('--noverify', 'Does not verify your password before saving')
-    .action((passwordlist, args) => {
-        if (!args.name)
-            return console.log(
-                chalk.red(
-                    `The parameter "name" is required. Try use: "password-cli save --help"`
-                )
+    .action(async (passwordlist, name, args) => {
+        let _passwordlist: string;
+        if (!passwordlist) {
+            _passwordlist = await getPasswordlist();
+        } else {
+            _passwordlist = passwordlist;
+        }
+
+        if (!args.password)
+            args.password = await requestPassword('Password to save');
+        if (!args.passwordlistPassword)
+            args.passwordlistPassword = await requestPassword(
+                'Password of passwordlist'
             );
 
-        savePassword(passwordlist, args);
+        await savePassword(_passwordlist, name, args);
+        console.log(chalk.green('Successfully saved!'));
     });
 
 program
-    .command('get <passwordlist>')
+    .command('get [passwordlist] <name>')
     .description('Get your password')
     .option('-pl, --passwordlist <password>', 'Password of password list')
     .option('-n, --name <name>', 'Password name.')
     .option('-h, --hidden', 'Hide password when get')
-    .action(async (passwordlist, args) => {
-        if (!args.name)
-            return console.log(
-                chalk.red(
-                    `The parameter "name" is required. Try use: "password-cli get --help"`
-                )
-            );
-        const result = await getPassword(passwordlist, args);
+    .action(async (passwordlist, name, args) => {
+        let _passwordlist: string;
+        if (!passwordlist) {
+            _passwordlist = await getPasswordlist();
+        } else {
+            _passwordlist = passwordlist;
+        }
+
+        const result = await getPassword(_passwordlist, name, args);
 
         if (result) {
             if (!args.hidden) console.log(`Password: ${result}`);
@@ -126,7 +148,7 @@ program
     });
 
 // passwordlist's subcommands
-const create = program
+const createSubCmd = program
     .command('create <name>')
     .description('Create a new passwordlist')
     .option('-h, --hidden', "Hide password when it's generated")
@@ -155,10 +177,48 @@ const create = program
             });
     });
 
+const deleteSubCmd = program
+    .command('delete [passwordlist]')
+    .description('Delete a passwordlist')
+    .option('--force', 'Force delete passwordlist')
+    .action(async (passwordlist, args) => {
+        let _passwordlist: string;
+        if (!passwordlist) {
+            _passwordlist = await getPasswordlist();
+        } else {
+            _passwordlist = passwordlist;
+        }
+
+        if (!args.force) {
+            console.log(chalk.red('Danger zone!'));
+
+            const sure = (
+                await inquirer.prompt({
+                    message:
+                        'Are you sure, this will delete all your passwords in your passwordlist!',
+                    name: 'sure',
+                    type: 'list',
+                    choices: ['Yes', 'No'],
+                })
+            ).sure;
+
+            if (sure === 'No') {
+                console.log(chalk.red('aborted'));
+                return;
+            }
+        }
+
+        const spinner = ora('Deleting...');
+        spinner.start();
+        await deletePasswordlist(_passwordlist);
+        spinner.succeed(`${_passwordlist} deleted!`);
+    });
+
 program
     .command('passwordlist')
     .description('List all passwordlist')
-    .addCommand(create)
+    .addCommand(createSubCmd)
+    .addCommand(deleteSubCmd)
     .action(() => {
         const passwordlists = listAllPasswordlist();
 

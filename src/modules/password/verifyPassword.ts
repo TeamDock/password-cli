@@ -1,18 +1,11 @@
-import inquirer from 'inquirer';
 import axios from 'axios';
 import crypto from 'crypto';
+import { requestPassword } from '../../utils/requestPassword';
 
 async function verifyPassword(password?: string) {
     let _password;
     if (!password) {
-        _password = (
-            await inquirer.prompt({
-                type: 'password',
-                name: 'password',
-                message: 'Type your password',
-                mask: '*',
-            })
-        ).password;
+        _password = await requestPassword();
     } else {
         _password = password;
     }

@@ -3,6 +3,7 @@ import readPasswordlist from './readPasswordlist';
 import writePasswordlist from './writePasswordlist';
 import listAllPasswordlist from './listAllPasswordlist';
 import getPasswordfromPasswordlist from './getPasswordfromPasswordlist';
+import deletePasswordlist from './deletePasswordlist';
 
 export {
     createPasswordlist,
@@ -10,4 +11,5 @@ export {
     writePasswordlist,
     listAllPasswordlist,
     getPasswordfromPasswordlist,
+    deletePasswordlist,
 };
