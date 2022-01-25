@@ -6,7 +6,7 @@ import ora from 'ora';
 import packageJson from '../package.json';
 import { APPDATA } from './utils/paths';
 import { program } from 'commander';
-import { mkdirSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync } from 'fs';
 import { requestPassword } from './utils/requestPassword';
 import { getPasswordlist } from './utils/getPasswordlist';
 
@@ -22,6 +22,9 @@ import {
     deletePasswordlist,
     listAllPasswordlist,
 } from './modules/passwordlist';
+import { loadPreset } from './modules/preset/loadPreset';
+import path from 'path';
+import { setPreset } from './modules/preset/setPreset';
 
 program.name('password-cli');
 program.version(packageJson.version);
@@ -32,11 +35,13 @@ program
     .option('-s, --symbols', 'Include symbols')
     .option('-n, --numbers', 'Include numbers')
     .option('-l, --length <length>', 'Password length', '20')
-    .option('-p, --preset <path>', 'Load a password preset') // TODO
-    .option('--save', "Save password when it's generated") // TODO
+    .option('-p, --preset <name>', 'Load a password preset')
     .option('--hidden', "Hide password when it's generated")
     .description('Generate a secure password')
     .action((args) => {
+        if (args.preset) {
+            args = JSON.parse(loadPreset(args.preset));
+        }
         const password = generatePassword(args);
         console.log(chalk.green('Your password has been generated'));
 
@@ -231,6 +236,54 @@ program
             console.log(chalk.white(`[${i + 1}] `, chalk.green(passwordlist)));
         }
     });
+
+// preset's subcommands
+const setSubCmd = program
+    .command('set <name>')
+    .description('Create or set a preset')
+    .action(async (name) => {
+        const presetPath = path.join(APPDATA, 'presets', name + '.preset');
+
+        const defaultPreset = {
+            numbers: true,
+            symbols: true,
+            length: '20',
+        };
+
+        const result = JSON.parse(
+            (
+                await inquirer.prompt({
+                    type: 'editor',
+                    message: '',
+                    name: 'editor',
+                    default: existsSync(presetPath)
+                        ? readFileSync(presetPath)
+                        : JSON.stringify(defaultPreset, null, 2),
+                })
+            ).editor
+        );
+
+        setPreset(name, JSON.stringify(result));
+    });
+
+const getSubCmd = program
+    .command('get <name>')
+    .description('get preset')
+    .action(async (name) => {
+        const presetPath = path.join(APPDATA, 'presets', name + '.preset');
+
+        if (!existsSync(presetPath))
+            throw new Error('This preset do not exists.');
+
+        const preset = JSON.parse(loadPreset(name));
+
+        console.log(`Include symbols: ${chalk.green(preset.symbols)}`);
+        console.log(`Include numbers: ${chalk.green(preset.numbers)}`);
+        console.log(`Password length: ${chalk.green(preset.length)}`);
+        console.log(`Hidden mode: ${chalk.green(preset.hidden ?? false)}`);
+    });
+
+program.command('preset').addCommand(setSubCmd).addCommand(getSubCmd);
 
 function main(args: string[]) {
     mkdirSync(APPDATA, { recursive: true });
