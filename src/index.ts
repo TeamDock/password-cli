@@ -86,7 +86,7 @@ program
     });
 
 program
-    .command('save [passwordlist] <name>')
+    .command('save <name> [passwordlist]')
     .description('Save your password in safe place')
     .option('-p, --password <password>', 'Password to save')
     .option(
@@ -94,7 +94,7 @@ program
         'Password of password list'
     )
     .option('--noverify', 'Does not verify your password before saving')
-    .action(async (passwordlist, name, args) => {
+    .action(async (name, passwordlist, args) => {
         let _passwordlist: string;
         if (!passwordlist) {
             _passwordlist = await getPasswordlist();
@@ -114,12 +114,12 @@ program
     });
 
 program
-    .command('get [passwordlist] <name>')
+    .command('get <name> [passwordlist]')
     .description('Get your password')
     .option('-pl, --passwordlist <password>', 'Password of password list')
     .option('-n, --name <name>', 'Password name.')
     .option('-h, --hidden', 'Hide password when get')
-    .action(async (passwordlist, name, args) => {
+    .action(async (name, passwordlist, args) => {
         let _passwordlist: string;
         if (!passwordlist) {
             _passwordlist = await getPasswordlist();
