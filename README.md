@@ -1,5 +1,5 @@
 <div align=center>
-    <img src="./logo/logo@0.5x.png" height=120 style="border-radius: 15px;" />
+    <img src="./logo/logo@0.5x.png" height=120 style="border-radius: 20px;" />
     <h1>Password-cli</h1>
 
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=TeamDock_password-cli&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=TeamDock_password-cli)
@@ -98,6 +98,22 @@ password-cli passwordlist delete <name>
 To list all passwordlist use: 
 ```
 password-cli passwordlist
+```
+
+## Presets
+Preset is used in the "generate" command to generate a password with a ready template:
+
+To create a preset use:
+```
+password-cli preset set <name>
+```
+To show a preset use: 
+```
+password-cli preset get <name>
+```
+To use the preset with `generate` command:
+```
+password-cli generate --preset <name>
 ```
 
 # 🔗 Contribute
