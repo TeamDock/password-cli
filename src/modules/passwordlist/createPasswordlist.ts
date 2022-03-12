@@ -1,5 +1,4 @@
 import path from 'path';
-import crypto from 'crypto';
 import { appendFileSync, existsSync, mkdirSync } from 'fs';
 import { APPDATA } from '../../utils/paths';
 import { generatePassword } from '../password';
@@ -14,16 +13,18 @@ function createPasswordlist(name: string) {
         throw new Error('There is already a password list with that name');
     }
 
-    const _name = name ?? crypto.randomBytes(10).toString('hex');
     const defaultSettings = [] as PasswordList[];
 
     const password = generatePassword({
         length: '32',
         numbers: true,
+        symbols: true,
     });
 
     const encryptedData = encrypt(JSON.stringify(defaultSettings), password);
-    appendFileSync(path.join(passwordsPath, _name), encryptedData);
+    appendFileSync(path.join(passwordsPath, name), encryptedData, {
+        mode: 0o700,
+    });
 
     return password;
 }

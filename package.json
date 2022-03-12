@@ -49,7 +49,9 @@
         "crypto": "^1.0.1",
         "eslint-plugin-jest": "^26.0.0",
         "inquirer": "^8.2.0",
-        "ora": "5.4.1"
+        "ora": "5.4.1",
+        "win-attributes": "^0.2.2",
+        "winattr": "^3.0.0"
     },
     "keywords": [
         "password",

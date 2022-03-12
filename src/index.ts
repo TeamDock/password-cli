@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env ts-node
 import packageJson from '../package.json';
 import { APPDATA } from './utils/paths';
 import { program } from 'commander';
